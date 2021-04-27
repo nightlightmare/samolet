@@ -1,9 +1,11 @@
-import React, { useEffect, useState, FC } from "react";
-import { Button, Input, Space, Table, Typography } from "antd";
+import React, { FC, useEffect } from "react";
+import { Link } from "react-router-dom";
+import { observer } from "mobx-react";
+import { Button, Input, Space, Table } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { ILibraryInfo } from "types";
-import { getData } from "api";
-import { FilterDropdownProps, ColumnType } from "antd/lib/table/interface";
+import { FilterDropdownProps } from "antd/lib/table/interface";
+import { useStores } from "hooks";
 
 const getColumnSearchProps = (dataIndex: string) => ({
     filterDropdown: ({
@@ -61,23 +63,13 @@ const getColumnSearchProps = (dataIndex: string) => ({
 });
 
 const List: FC = () => {
-    const [data, setData] = useState<ILibraryInfo[] | []>([]);
+    const { regionsStore } = useStores();
 
     useEffect(() => {
-        getData().then(setData);
+        regionsStore.getData();
     }, []);
 
-    console.log(data);
-
-    const { Title } = Typography;
-
     const columns = [
-        {
-            title: "Order",
-            dataIndex: "order",
-            key: "order",
-            width: 100,
-        },
         {
             title: "Регион",
             dataIndex: "territory",
@@ -92,19 +84,27 @@ const List: FC = () => {
                 a.libraries - b.libraries,
             ellipsis: true,
         },
+        {
+            title: "",
+            key: "action",
+            render: (text: string, record: ILibraryInfo) => (
+                <Space>
+                    <Link to={`/info/${record.order}`}>Подробнее</Link>
+                </Space>
+            ),
+            width: 112,
+        },
     ];
 
     return (
-        <>
-            <Title>Список регионов</Title>
-            <Table
-                rowKey={"order"}
-                columns={columns}
-                dataSource={data}
-                bordered
-                pagination={false}
-            />
-        </>
+        <Table
+            rowKey={"order"}
+            columns={columns}
+            dataSource={regionsStore.data}
+            bordered
+            pagination={false}
+            loading={regionsStore.loading}
+        />
     );
 };
-export default List;
+export default observer(List);
